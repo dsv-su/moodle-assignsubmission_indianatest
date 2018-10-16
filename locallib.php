@@ -219,7 +219,19 @@ class assign_submission_indianatest extends assign_submission_plugin {
     }
 
     public function output_test_info(stdClass $indianatestsubmission) {
-        $result = "Test ID: $indianatestsubmission->testid";
+        global $OUTPUT;
+
+        $test = $this->validate_test($indianatestsubmission);
+
+        $result = '';
+
+        if ($test) {
+            $result .= $OUTPUT->pix_icon('i/valid', 'The Certificate is successfully validated.');
+        } else {
+            $result .= $OUTPUT->pix_icon('i/invalid', 'The Certificate cannot not be validated. Either Test ID does not exist, or supplied data is incorrect.');
+        }
+
+        $result .= "<br>Test ID: $indianatestsubmission->testid";
 
         if (!empty($indianatestsubmission->ipnumber)) {
             $result .= "<br>IP number: $indianatestsubmission->ipnumber";
@@ -229,12 +241,18 @@ class assign_submission_indianatest extends assign_submission_plugin {
             $result .= "<br>Email: $indianatestsubmission->email";
         }
 
-        $test = $this->validate_test($indianatestsubmission);
         if ($test) {
             $date = date("Y-m-d H:i:s", $test->date);
-            $result .= "<p><p>The Certificate is valid for $test->name. The plagiarism test was passed on $date and took $test->time minutes.<p>Level: $test->level";
+            if (!has_capability('mod/assign:grade', $this->assignment->get_context())) {
+                $result .= "<p><p>The Certificate is valid for $test->name. The plagiarism test was passed on $date and took $test->time minutes.<p>Level: $test->level";
+            } else {
+                $result .= "<p>Name: $test->name<br>Date: $date<br>Time: $test->time minutes<br>Level: $test->level";
+            }
+
         } else {
-            $result .= '<p><p>The Certificate cannot not be validated. Either Test ID does not exist, or supplied data is incorrect.';
+            if (!has_capability('mod/assign:grade', $this->assignment->get_context())) {
+                $result .= '<p><p>The Certificate cannot not be validated. Either Test ID does not exist, or supplied data is incorrect.';
+            }
         }
 
         return $result;
