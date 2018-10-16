@@ -116,8 +116,7 @@ class assign_submission_indianatest extends assign_submission_plugin {
     }
 
     /**
-     * Save data to the database and trigger plagiarism plugin,
-     * if enabled, to scan the uploaded content via events trigger
+     * Save data to the database
      *
      * @param stdClass $submission
      * @param stdClass $data
@@ -163,7 +162,12 @@ class assign_submission_indianatest extends assign_submission_plugin {
         );
 
         if ($indianatestsubmission) {
-
+            if (
+                $indianatestsubmission->testid <> $data->testid ||
+                (!empty($data->email) && $indianatestsubmission->email <> $data->email) ||
+                (!empty($data->ipnumber) && $indianatestsubmission->ipnumber <> $data->ipnumber)) {
+                $indianatestsubmission->valid = 0;
+            }
             $indianatestsubmission->testid = $data->testid;
             $indianatestsubmission->email = $data->email;
             $indianatestsubmission->ipnumber = $data->ipnumber;
@@ -193,7 +197,7 @@ class assign_submission_indianatest extends assign_submission_plugin {
     }
 
      /**
-      * Display indianatest word count in the submission status table
+      * Display indianatest validation in the submission status table
       *
       * @param stdClass $submission
       * @param bool $showviewlink - If the summary has been truncated set this to true
@@ -203,6 +207,7 @@ class assign_submission_indianatest extends assign_submission_plugin {
         global $CFG;
 
         $indianatestsubmission = $this->get_indianatest_submission($submission->id);
+
         // Always show the view link.
         $showviewlink = false;
 
@@ -250,14 +255,12 @@ class assign_submission_indianatest extends assign_submission_plugin {
             return false;
         }
 
-        $existingdata = $DB->get_record('assignsubmission_indianatest', array('assignment' => $this->assignment->get_instance()->id, 'testid' => $indianatestsubmission->testid, 'valid' => 1));
-
-        if ($existingdata
-            && !empty($existingdata->time)
-            && !empty($existingdata->date)
-            && !empty($existingdata->level)
-            && !empty($existingdata->name)) {
-                return $existingdata;
+        if ($indianatestsubmission->valid
+            && $indianatestsubmission->time
+            && $indianatestsubmission->date
+            && $indianatestsubmission->level
+            && $indianatestsubmission->name) {
+                return $indianatestsubmission;
         }
 
         // Open the website
@@ -282,25 +285,28 @@ class assign_submission_indianatest extends assign_submission_plugin {
             $page = $form->submit();
             if (strpos($page->html, "The Certificate for e-mail") && strpos($page->html, "is valid for")) {
                 $validated = true;
+                $indianatestsubmission->name = $page->forms(1)->fields['userName'];
+                $indianatestsubmission->time = $page->forms(1)->fields['elapsedTime'];
+                $indianatestsubmission->date = strtotime($page->forms(1)->fields['whenTestPassed']);
+                $indianatestsubmission->level = $page->forms(1)->fields['testLevel'];
             }
-        } 
-
+        }
         if (!empty($indianatestsubmission->ipnumber)) {
             $form = $page->forms(0);
             $form->set('ipNumber', $indianatestsubmission->ipnumber);
             $page = $form->submit();
             if (strpos($page->html, "The Certificate for IP number") && strpos($page->html, "is valid for")) {
                 $validated = true;
+                $indianatestsubmission->name = $page->forms(1)->fields['userName'];
+                $indianatestsubmission->time = $page->forms(1)->fields['elapsedTime'];
+                $indianatestsubmission->date = strtotime($page->forms(1)->fields['whenTestPassed']);
+                $indianatestsubmission->level = $page->forms(1)->fields['testLevel'];
             }
         }
 
         if (!$validated) {
             return false;
         } else {
-            $indianatestsubmission->name = $page->forms(1)->fields['userName'];
-            $indianatestsubmission->time = $page->forms(1)->fields['elapsedTime'];
-            $testindianatestsubmissiondata->date = strtotime($page->forms(1)->fields['whenTestPassed']);
-            $indianatestsubmission->level = $page->forms(1)->fields['testLevel'];
             $indianatestsubmission->valid = 1;
             $DB->update_record('assignsubmission_indianatest', $indianatestsubmission);
         }
@@ -390,7 +396,7 @@ class assign_submission_indianatest extends assign_submission_plugin {
     }
 
     /**
-     * No text is set for this plugin
+     * No testid is set for this plugin
      *
      * @param stdClass $submission
      * @return bool
