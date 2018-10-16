@@ -1,0 +1,3 @@
+[submodule "src/pgbrowser"]
+	path = src/pgbrowser
+	url = https://github.com/monkeysuffrage/pgbrowser.git
