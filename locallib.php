@@ -91,12 +91,15 @@ class assign_submission_indianatest extends assign_submission_plugin {
 
         $mform->addElement('static', 'description', '', 'Enter the unique Test ID printed on the Certificate');
         $mform->addElement('text', 'testid', get_string('testid', 'assignsubmission_indianatest'));
+        $mform->setType('testid', PARAM_INT);
 
         $mform->addElement('static', 'description', '', 'Enter the email address to which the Certificate was sent');
         $mform->addElement('text', 'email', get_string('email', 'assignsubmission_indianatest'));
+        $mform->setType('email', PARAM_TEXT);
 
         $mform->addElement('static', 'description', '', 'Alternatively you can enter the IP address from the Certificate');
         $mform->addElement('text', 'ipnumber', get_string('ipnumber', 'assignsubmission_indianatest'));
+        $mform->setType('ipnumber', PARAM_TEXT);
 
         $submissionid = $submission ? $submission->id : 0;
 
