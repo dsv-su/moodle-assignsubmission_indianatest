@@ -91,7 +91,7 @@ class assign_submission_indianatest extends assign_submission_plugin {
 
         $mform->addElement('static', 'description', '', 'Enter the unique Test ID printed on the Certificate');
         $mform->addElement('text', 'testid', get_string('testid', 'assignsubmission_indianatest'));
-        $mform->setType('testid', PARAM_INT);
+        $mform->setType('testid', PARAM_TEXT);
 
         $mform->addElement('static', 'description', '', 'Enter the email address to which the Certificate was sent');
         $mform->addElement('text', 'email', get_string('email', 'assignsubmission_indianatest'));
@@ -244,9 +244,9 @@ class assign_submission_indianatest extends assign_submission_plugin {
         if ($test) {
             $date = date("Y-m-d H:i:s", $test->date);
             if (!has_capability('mod/assign:grade', $this->assignment->get_context())) {
-                $result .= "<p><p>The Certificate is valid for $test->name. The plagiarism test was passed on $date and took $test->time minutes.<p>Level: $test->level";
+                $result .= "<p><p>The Certificate is valid for $test->name. The plagiarism test was passed on $date and took $test->time sec.<p>Level: $test->level";
             } else {
-                $result .= "<p>Name: $test->name<br>Date: $date<br>Time: $test->time minutes<br>Level: $test->level";
+                $result .= "<p>Name: $test->name<br>Date: $date<br>Time: $test->time sec<br>Level: $test->level";
             }
 
         } else {
@@ -326,6 +326,7 @@ class assign_submission_indianatest extends assign_submission_plugin {
             return false;
         } else {
             $indianatestsubmission->valid = 1;
+            $indianatestsubmission->time = round(($indianatestsubmission->time)*60);
             $DB->update_record('assignsubmission_indianatest', $indianatestsubmission);
         }
 
