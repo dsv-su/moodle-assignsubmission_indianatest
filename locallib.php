@@ -281,23 +281,14 @@ class assign_submission_indianatest extends assign_submission_plugin {
                 return $indianatestsubmission;
         }
 
-        // Open the website
-        $url = 'https://www.indiana.edu/~academy/firstPrinciples/login.phtml?action=validate';
-        $b = new PGBrowser();
-        $page = $b->get($url);
-        $form = $page->forms(1);
-        $form->set('timeStamp', $indianatestsubmission->testid);
-        $page = $form->submit();
-
-        // Did the certificate exist?
-        if (strpos($page->html, "No matches were found for Test ID")) {
-            return false;
-        }
-
         $validated = false;
         $validateddata = new stdClass();
 
         if (!empty($indianatestsubmission->email)) {
+            $page = $this->connect($indianatestsubmission);
+            if (!$page) {
+                return $indianatestsubmission;
+            }
             $form = $page->forms(1);
             $form->set('email', $indianatestsubmission->email);
             $page = $form->submit();
@@ -310,6 +301,10 @@ class assign_submission_indianatest extends assign_submission_plugin {
             }
         }
         if (!empty($indianatestsubmission->ipnumber)) {
+            $page = $this->connect($indianatestsubmission);
+            if (!$page) {
+                return $indianatestsubmission;
+            }
             $form = $page->forms(0);
             $form->set('ipNumber', $indianatestsubmission->ipnumber);
             $page = $form->submit();
@@ -334,6 +329,25 @@ class assign_submission_indianatest extends assign_submission_plugin {
     }
 
 
+    public function connect(stdClass $indianatestsubmission) {
+        global $DB;
+        // Open the website
+        $url = 'https://www.indiana.edu/~academy/firstPrinciples/mainLogin.php?action=validate';
+        $b = new PGBrowser();
+        $page = $b->get($url);
+        $form = $page->forms(1);
+        $form->set('timeStamp', $indianatestsubmission->testid);
+        $page = $form->submit();
+
+        // Did the certificate exist?
+        if (strpos($page->html, "No matches were found for Test ID")) {
+            $indianatestsubmission->valid = 0;
+            $DB->update_record('assignsubmission_indianatest', $indianatestsubmission);
+            return false;
+        }
+
+        return $page;
+    }
 
     /**
      * Produce a list of files suitable for export that represent this submission.
