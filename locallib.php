@@ -273,6 +273,7 @@ class assign_submission_indianatest extends assign_submission_plugin {
             return false;
         }
 
+
         if ($indianatestsubmission->valid
             && $indianatestsubmission->time
             && $indianatestsubmission->date
@@ -287,7 +288,7 @@ class assign_submission_indianatest extends assign_submission_plugin {
         if (!empty($indianatestsubmission->email)) {
             $page = $this->connect($indianatestsubmission);
             if (!$page) {
-                return $indianatestsubmission;
+                return false;
             }
             $form = $page->forms(1);
             $form->set('email', $indianatestsubmission->email);
@@ -303,7 +304,7 @@ class assign_submission_indianatest extends assign_submission_plugin {
         if (!empty($indianatestsubmission->ipnumber)) {
             $page = $this->connect($indianatestsubmission);
             if (!$page) {
-                return $indianatestsubmission;
+                return false;
             }
             $form = $page->forms(0);
             $form->set('ipNumber', $indianatestsubmission->ipnumber);
@@ -332,7 +333,7 @@ class assign_submission_indianatest extends assign_submission_plugin {
     public function connect(stdClass $indianatestsubmission) {
         global $DB;
         // Open the website
-        $url = 'https://www.indiana.edu/~academy/firstPrinciples/mainLogin.php?action=validate';
+        $url = 'https://academy.sitehost.iu.edu/mainLogin.php?action=validate';
         $b = new PGBrowser();
         $page = $b->get($url);
         $form = $page->forms(1);
